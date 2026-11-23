@@ -1,0 +1,12 @@
+{
+  "name": "pi-workspace-builder",
+  "version": "0.1.0",
+  "description": "Interactive Pi workspace setup with independent clones and new feature-branch worktrees",
+  "type": "module",
+  "engines": { "node": ">=22.18.0" },
+  "scripts": { "test": "node --test *.test.ts" },
+  "keywords": ["pi-package"],
+  "peerDependencies": { "@earendil-works/pi-coding-agent": "*" },
+  "pi": { "extensions": ["./index.ts"] },
+  "repository": { "type": "git", "url": "https://github.com/stephen-melsom-s1/pi-workspace-builder.git" }
+}
