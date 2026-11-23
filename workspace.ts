@@ -221,7 +221,7 @@ export async function createWorkspace(plan: WorkspacePlan, exec: Exec, progress:
 }
 
 export async function discoverRepositories(root: string, exec: Exec): Promise<string[]> {
-  const sources = new Set<string>();
+  const sources = new Map<string, string>();
   async function directories(path: string): Promise<string[]> {
     try { return (await readdir(path, { withFileTypes: true })).filter((entry) => entry.isDirectory() && !entry.name.startsWith(".")).map((entry) => join(path, entry.name)); }
     catch (error) {
@@ -235,7 +235,12 @@ export async function discoverRepositories(root: string, exec: Exec): Promise<st
       const result = await exec("git", ["config", "--file", join(path, ".git", "config"), "--get", "remote.origin.url"], { timeout: 5000, maxBuffer: 8192 });
       if (result.code === 0 && result.stdout.trim()) {
         // Ignore unsupported or credential-bearing remotes rather than showing them in the picker.
-        try { sources.add(parseRepository(result.stdout.trim()).source); } catch { /* Not a supported source. */ }
+        try {
+          const source = parseRepository(result.stdout.trim()).source;
+          const github = source.match(/^(?:https:\/\/github\.com\/|ssh:\/\/git@github\.com\/|git@github\.com:)([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i);
+          const identity = github ? `github.com/${github[1]}/${github[2]}`.toLowerCase() : source;
+          if (!sources.has(identity)) sources.set(identity, source);
+        } catch { /* Not a supported source. */ }
       }
     } catch (error) {
       if (!["ENOENT", "ENOTDIR", "EACCES", "EPERM"].includes((error as NodeJS.ErrnoException).code || "")) throw error;
@@ -248,5 +253,5 @@ export async function discoverRepositories(root: string, exec: Exec): Promise<st
       else await inspect(candidate);
     }
   }
-  return [...sources].sort();
+  return [...sources.values()].sort();
 }

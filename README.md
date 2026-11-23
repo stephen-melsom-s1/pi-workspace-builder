@@ -42,7 +42,7 @@ The wizard asks for:
 
 Press Enter to accept defaults, or Escape to cancel a questionnaire dialog. Cancellation before creation writes nothing. An all-reference workspace skips the branch questions.
 
-Known repositories are suggestions derived from local Git remote metadata, not reused working copies. Discovery checks direct repositories, workspace-level plain clones, and `<repo>-worktrees/main` clones; it does not recursively scan repository contents. Credential-bearing or unsupported remotes and unreadable directories are skipped.
+Known repositories are suggestions derived from local Git remote metadata, not reused working copies. GitHub sources are deduplicated by owner/repository, ignoring `.git`, letter case, and standard SSH/HTTPS URL differences; the first discovered clone URL is kept unchanged. Discovery checks direct repositories, workspace-level plain clones, and `<repo>-worktrees/main` clones; it does not recursively scan repository contents. Credential-bearing or unsupported remotes and unreadable directories are skipped.
 
 ### Created layout
 

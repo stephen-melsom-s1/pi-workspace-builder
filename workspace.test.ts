@@ -165,6 +165,29 @@ test("discovers deduplicated remotes from plain and worktree layouts; ignores cr
   assert.deepEqual(await discoverRepositories(plan.root, exec), ["git@github.com:example/app.git"]);
 });
 
+test("discovery merges GitHub URL spellings while preserving a clone URL and distinct repos", async (t) => {
+  const { plan } = await fixture(t);
+  const variants = [
+    "git@github.com:example/infra", "git@github.com:example/infra.git",
+    "ssh://git@github.com/example/infra", "ssh://git@github.com/example/infra.git",
+    "https://github.com/example/infra", "https://github.com/example/infra.git",
+    "https://github.com/EXAMPLE/Infra.git/", "git@GITHUB.COM:example/infra.git",
+  ];
+  const distinct = [
+    "git@github.com:another-org/infra.git", "https://github.com/example/another-repo.git",
+    "https://gitlab.com/example/infra.git", "/tmp/infra.git",
+  ];
+  for (const [index, source] of [...variants, ...distinct].entries()) {
+    const metadata = join(plan.root, "workspace", `repo-${index}`, ".git");
+    await mkdir(metadata, { recursive: true });
+    await git(exec, ["config", "--file", join(metadata, "config"), "remote.origin.url", source]);
+  }
+  const discovered = await discoverRepositories(plan.root, exec);
+  assert.equal(discovered.length, 1 + distinct.length);
+  assert.equal(discovered.filter((source) => variants.includes(source)).length, 1);
+  for (const source of distinct) assert.ok(discovered.includes(source), source);
+});
+
 test("clone explicitly uses origin despite clone.defaultRemoteName configuration", async (t) => {
   const { plan } = await fixture(t);
   const configuredExec: Exec = (command, args, options) => exec(command, ["-c", "clone.defaultRemoteName=upstream", ...args], options);
